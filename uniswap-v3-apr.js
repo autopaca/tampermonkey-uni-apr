@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Uniswap APR
-// @namespace    http://tampermonkey.net/
+// @namespace    https://greasyfork.org/en/scripts/462452-uniswap-apr
 // @version      0.1
 // @description  Auto calculate APR for Uniswap V3 Pools
 // @author       Joe (Thanks to Maoshen)
