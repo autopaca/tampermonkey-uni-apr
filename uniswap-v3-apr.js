@@ -151,6 +151,23 @@
     timer = setInterval(excute, 500);
   };
 
-  init();
-  window.addEventListener("popstate", init);
+  let firstInit = true;
+  const checkInit = () => {
+      if (firstInit) {
+          init();
+          firstInit = false;
+      }
+      const newNodes = [
+      ...document.querySelectorAll(
+        ".sc-jKJlTe.sc-gipzik.sc-hzDkRC.sc-cbkKFq.hDKAee"
+      ),
+    ];
+    if (newNodes.length !== nodes.length) {
+        init();
+    }
+  }
+
+  setInterval(checkInit, 2000);
+  //init();
+  //window.addEventListener("popstate", init);
 })();
