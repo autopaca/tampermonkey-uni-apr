@@ -19,7 +19,7 @@
       if (timer) {
         clearTimeout(timer);
       }
-      timer = setTimeout(() => cb(...args), 100);
+      timer = setTimeout(() => cb(...args), 200);
     };
   };
 
@@ -50,9 +50,10 @@
 
   const targetSelector = ".sc-jKJlTe.sc-gipzik.sc-hzDkRC.sc-cbkKFq.hDKAee";
 
-  const setAdditionColumn = debounce((target) => {
-    console.log(target);
+  const setAdditionColumn = (target) => {
     if (running.has(target)) return;
+
+    console.log("updating node", target);
 
     try {
       running.add(target);
@@ -109,16 +110,21 @@
     } finally {
       running.delete(target);
     }
-  });
+  };
 
-  const setTargetNodes = () =>
+  const setTargetNodes = debounce(() =>
     [...document.querySelectorAll(targetSelector)].forEach((node) =>
       setAdditionColumn(node)
-    );
+    )
+  );
 
   const init = () => {
     const observer = new MutationObserver(setTargetNodes);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
   };
 
   init();
