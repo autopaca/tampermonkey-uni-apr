@@ -19,7 +19,6 @@
       if (timer) {
         clearTimeout(timer);
       }
-
       timer = setTimeout(() => cb(...args), 100);
     };
   };
@@ -49,125 +48,78 @@
 
   let running = new Set();
 
-  const setAdditionColumn = (target) => {
-    running.add(target);
-    const header = target.firstElementChild.firstElementChild;
-    if (!header.addedNode) {
+  const targetSelector = ".sc-jKJlTe.sc-gipzik.sc-hzDkRC.sc-cbkKFq.hDKAee";
+
+  const setAdditionColumn = debounce((target) => {
+    console.log(target);
+    if (running.has(target)) return;
+
+    try {
+      running.add(target);
+      const header = target.firstElementChild.firstElementChild;
+      if (!header.addedNode) {
         header.addedNode = document.createElement("div");
-        header.addedNode.innerHTML = '<span style="padding: 0 20px">APR</span> <span style="padding: 0 20px">APR 7D-AVG</span>';
+        header.addedNode.innerHTML =
+          '<span style="padding: 0 20px">APR</span> <span style="padding: 0 20px">APR 7D-AVG</span>';
         header.addedNode.style.cssText =
           "position: absolute; left: 100%; top: 50%; transform: translateY(-50%); white-space: nowrap; padding: 0 10px;";
         header.style.setProperty("position", "relative");
         header.appendChild(header.addedNode);
-    }
-    const rows = [...target.querySelectorAll("a > div")];
-    rows.forEach((row) => {
-      const feeRateText = row.querySelector(
-        "div:nth-child(2) > div > div:nth-child(3)"
-      ).textContent;
-      const feeRate = parseFeeRate(feeRateText);
-      const [tvlText, volume1DText, volume7DText] = [
-        ...row.querySelectorAll('div[end="1"]'),
-      ].map((c) => c.textContent);
-
-      const v1 = parseVolume(volume1DText);
-      const v7 = parseVolume(volume7DText);
-      const tvl = parseVolume(tvlText);
-      //console.log(feeRate, tvlText, tvl, v1, v7);
-      //const nodes = [...row.querySelectorAll('div[end="1"]')].slice(-2);
-      const apr1 = ((v1 * feeRate) / tvl) * 365;
-      const apr7 = (((v7 / 7) * feeRate) / tvl) * 365;
-      console.log({ feeRate, v1, v7, tvl, apr1, apr7 });
-      let added = row.addedNode;
-
-      if (!added) {
-        added = row.addedNode = document.createElement("div");
-        added.appendChild(document.createElement("span"));
-        added.appendChild(document.createElement("span"));
-        added.style.cssText =
-          "position: absolute; left: 100%; top: 50%; transform: translateY(-50%); white-space: nowrap; padding: 0 10px;";
-        row.style.setProperty("position", "relative");
-        row.appendChild(added);
       }
-      const apr1Node = added.children[0];
-      apr1Node.style.cssText = "padding: 0 20px";
-      apr1Node.textContent = toAPR(apr1);
-      const apr7Node = added.children[1];
-      apr7Node.style.cssText = "padding: 0 20px";
-      apr7Node.textContent = toAPR(apr7);
+      const rows = [...target.querySelectorAll("a > div")];
+      rows.forEach((row) => {
+        const feeRateText = row.querySelector(
+          "div:nth-child(2) > div > div:nth-child(3)"
+        ).textContent;
+        const feeRate = parseFeeRate(feeRateText);
+        const [tvlText, volume1DText, volume7DText] = [
+          ...row.querySelectorAll('div[end="1"]'),
+        ].map((c) => c.textContent);
 
-      //added.textContent = toAPR(apr1);
-    });
+        const v1 = parseVolume(volume1DText);
+        const v7 = parseVolume(volume7DText);
+        const tvl = parseVolume(tvlText);
+        //console.log(feeRate, tvlText, tvl, v1, v7);
+        //const nodes = [...row.querySelectorAll('div[end="1"]')].slice(-2);
+        const apr1 = ((v1 * feeRate) / tvl) * 365;
+        const apr7 = (((v7 / 7) * feeRate) / tvl) * 365;
+        console.log({ feeRate, v1, v7, tvl, apr1, apr7 });
+        let added = row.addedNode;
 
-    running.delete(target);
-  };
-
-  const observeNode = (target) => {
-    const debouncedSetAdditionColumn = debounce(setAdditionColumn);
-
-    debouncedSetAdditionColumn(target);
-
-    const callback = (mutationList) => {
-      if (running.has(target)) return;
-
-      for (const mutation of mutationList) {
-        if (mutation.type === "childList") {
-          console.log("A child node has been added or removed.");
-          debouncedSetAdditionColumn(target);
+        if (!added) {
+          added = row.addedNode = document.createElement("div");
+          added.appendChild(document.createElement("span"));
+          added.appendChild(document.createElement("span"));
+          added.style.cssText =
+            "position: absolute; left: 100%; top: 50%; transform: translateY(-50%); white-space: nowrap; padding: 0 10px;";
+          row.style.setProperty("position", "relative");
+          row.appendChild(added);
         }
-      }
-    };
+        const apr1Node = added.children[0];
+        apr1Node.style.cssText = "padding: 0 20px";
+        apr1Node.textContent = toAPR(apr1);
+        const apr7Node = added.children[1];
+        apr7Node.style.cssText = "padding: 0 20px";
+        apr7Node.textContent = toAPR(apr7);
 
-    const observer = new MutationObserver(callback);
-    observer.observe(target, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
-  };
-
-  let timer,
-    nodes,
-    cleaners = [];
-
-  const excute = () => {
-    nodes = [
-      ...document.querySelectorAll(
-        ".sc-jKJlTe.sc-gipzik.sc-hzDkRC.sc-cbkKFq.hDKAee"
-      ),
-    ];
-
-    if (nodes.length === 0) {
-      return;
+        //added.textContent = toAPR(apr1);
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      running.delete(target);
     }
+  });
 
-    clearInterval(timer);
-
-    cleaners = nodes.map((n) => observeNode(n));
-  };
+  const setTargetNodes = () =>
+    [...document.querySelectorAll(targetSelector)].forEach((node) =>
+      setAdditionColumn(node)
+    );
 
   const init = () => {
-    cleaners.forEach((cb) => cb());
-    cleaners = [];
-    clearTimeout(timer);
-    timer = setInterval(excute, 500);
+    const observer = new MutationObserver(setTargetNodes);
+    observer.observe(document.body, { childList: true, subtree: true });
   };
 
-  let firstInit = true;
-  const checkInit = () => {
-      if (firstInit) {
-          init();
-          firstInit = false;
-      }
-      const newNodes = [
-      ...document.querySelectorAll(
-        ".sc-jKJlTe.sc-gipzik.sc-hzDkRC.sc-cbkKFq.hDKAee"
-      ),
-    ];
-    if (newNodes.length !== nodes.length) {
-        init();
-    }
-  }
-
-  setInterval(checkInit, 2000);
-  //init();
-  //window.addEventListener("popstate", init);
+  init();
 })();
